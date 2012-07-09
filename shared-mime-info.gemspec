@@ -1,26 +1,18 @@
 # -*- encoding: utf-8 -*-
 
-Gem::Specification.new do |s|
-  s.name = %q{shared-mime-info}
-  s.version = "0.1"
+require File.expand_path('../lib/shared-mime-info/version', __FILE__)
 
-  s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
-  s.authors = ["Mael Clerambault"]
-  s.date = %q{2009-02-15}
-  s.email = %q{mael@clerambault.fr}
-  s.files = ["lib/shared-mime-info.rb", "Rakefile", "LICENSE", "README.rdoc"]
-  s.has_rdoc = true
-  s.require_paths = ["lib"]
-  s.rubygems_version = %q{1.3.1}
-  s.summary = %q{Library to guess the MIME type of a file with both filename lookup and magic file detection}
+Gem::Specification.new do |gem|
+  gem.authors       = ["Daniel Vandersluis", "Tim Olsen", "Mael Clerambault"]
+  gem.email         = ["daniel@codexed.com", "tolsen@alum.mit.edu", "mael@clerambault.fr"]
+  gem.summary       = %q{Library to guess the MIME type of a file with both filename lookup and magic file detection}
+  gem.homepage      = "http://www.github.com/talentnest/shared-mime-info"
 
-  if s.respond_to? :specification_version then
-    current_version = Gem::Specification::CURRENT_SPECIFICATION_VERSION
-    s.specification_version = 2
-
-    if Gem::Version.new(Gem::RubyGemsVersion) >= Gem::Version.new('1.2.0') then
-    else
-    end
-  else
-  end
+  gem.files         = `git ls-files`.split($\)
+  gem.test_files    = gem.files.grep(%r{^(test|spec|features)/})
+  gem.name          = "shared-mime-info"
+  gem.require_paths = ["lib"]
+  gem.version       = SharedMimeInfo::VERSION
+  
+  gem.add_dependency "mime-types"
 end

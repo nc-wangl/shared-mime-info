@@ -1,6 +1,6 @@
-require 'rake/rdoctask'
+require 'rdoc/task'
 require 'rake/packagetask'
-require 'rake/gempackagetask'
+require 'rubygems/package_task'
 
 PKG_FILES = FileList["lib/*.rb", "Rakefile", "LICENSE", "README.rdoc"]
 
@@ -13,12 +13,12 @@ spec = Gem::Specification.new do |s|
   s.files = PKG_FILES.to_a
 end
 
-Rake::RDocTask.new do |rd|
+RDoc::Task.new do |rd|
   rd.rdoc_files.include "README.rdoc", "lib/*.rb"
   rd.options << "--inline-source"
 end
 
-Rake::GemPackageTask.new(spec).define
+Gem::PackageTask.new(spec).define
 
 desc 'Generate the magics parser'
 file "lib/magics.rb" => "magics.rl" do |t|
@@ -28,4 +28,11 @@ end
 desc 'Generate the gemspec'
 task :spec do
   open("#{spec.name}.gemspec", "w") {|g| g.puts spec.to_ruby }
+end
+
+desc "Open an pry session preloaded with this library"
+task :console do
+  require 'pry' rescue nil
+  console = defined?(Pry) ? :pry : :irb
+  sh "#{console} -rubygems -I lib -r shared-mime-info.rb"
 end

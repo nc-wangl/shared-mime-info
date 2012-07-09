@@ -12,181 +12,15 @@
 # ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 # OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
-
-require 'rexml/document'
-require 'magics'
+require 'shared-mime-info/magic'
+require 'shared-mime-info/type'
+require 'shared-mime-info/version'
 
 # This provides a way to guess the mime type of a file by doing both
 # filename lookups and _magic_ file checks. This implementation tries to
 # follow the version 0.13 of the
 # specification[http://standards.freedesktop.org/shared-mime-info-spec/shared-mime-info-spec-0.13.html].
 module MIME
-  VERSION = '0.1'
-
-  module Magic # :nodoc: all
-    class BadMagic < StandardError; end
-
-    class Entry
-      attr_reader :indent
-      def initialize(indent, start_offset, value_length, value, mask, word_size, range_length)
-        @indent = indent
-        @start_offset = start_offset
-        @value_length = value_length
-        @value = value.freeze
-        @mask = mask.freeze
-        @word_size = word_size
-        @range_length = range_length
-        @sub_entries = []
-      end
-
-      def add_subentry(entry)
-        if entry.indent == @indent + 1
-          @sub_entries << entry
-        elsif entry.indent > @indent + 1
-          if not @sub_entries.empty?
-            @sub_entries.last.add_subentry entry
-          else
-            raise BadMagic
-          end
-        else 
-          raise BadMagic
-        end
-      end
-
-      def =~(f)
-        check_file(f) and (@sub_entries.empty? || @sub_entries.any? {|e| e =~ f})
-      end
-
-      private
-      def check_file(f)
-        f.pos = @start_offset
-        r = (f.read(@value_length + @range_length -1)|| '').unpack("c*")
-        range_length = 0
-        found = false
-        while not found and range_length < r.size
-          found = @value.zip(@mask, r[range_length, @value_length]).all? {|vb, mb, rb| (rb & mb) == (vb & mb) }
-          range_length = range_length + 1
-        end
-        found
-      end
-    end
-
-    class RootEntry < Entry
-      attr_reader :priority, :type
-      def initialize(type, priority)
-        @indent = -1
-        @type = type
-        @priority = priority
-        @sub_entries = []
-      end
-
-      private
-      def check_file(*args) true end
-    end
-  end
-
-  # Type represents a single mime type such as <b>text/html</b>.
-  class Type
-    # Returns the type of a mime type as a String, such as <b>text/html</b>.
-    attr_reader :type
-
-    attr_reader :magics, :glob_patterns
-
-    # Returns the media part of the type of a mime type as a string,
-    # such as <b>text</b> for a type of <b>text/html</b>.
-    def media; @type.split('/', 2).first; end
-
-    # Returns the subtype part of the type of a mime type as a string,
-    # such as <b>html</b> for a type of <b>text/html</b>.
-    def subtype; @type.split('/', 2).last; end
-
-    # Synonym of type.
-    def to_s; @type end
-
-    # Returns a Hash of the comments associated with a mime type in
-    # different languages.
-    #
-    #  MIME['text/html'].comment.default
-    #   => "HTML page"
-    #
-    #  MIME['text/html'].comment['fr']
-    #   => "page HTML"
-    def comment
-      file = ''
-      MIME.mime_dirs.each { |dir|
-        file = "#{dir}/#{@type}.xml"
-        break if File.file? file
-      }
-
-      comments = {}
-      open(file) { |f|
-        doc = REXML::Document.new f
-        REXML::XPath.match(doc, '*/comment').each { |c|
-          if att = c.attributes['xml:lang']
-            comments[att] = c.text
-          else
-            comments.default = c.text
-          end
-        }
-      }
-      comments
-    end
-
-    # Returns all the types this type is a subclass of.
-    def parents
-      file = ''
-      MIME.mime_dirs.each { |dir|
-        file = "#{dir}/#{@type}.xml"
-        break if File.file? file
-      }
-
-      open(file) { |f|
-        doc = REXML::Document.new f
-        REXML::XPath.match(doc, '*/sub-class-of').collect { |c|
-          MIME[c.attributes['type']]
-        }
-      }
-    end
-
-    # Equality test.
-    #
-    #  MIME['text/html'] == 'text/html'
-    #   => true
-    def ==(type)
-      if type.is_a? Type
-        @type == type.type
-      elsif type.respond_to? :to_str
-        @type == type
-      else
-        false
-      end
-    end
-
-    # Check if _filename_ is of this particular type by comparing it to
-    # some common extensions.
-    #
-    #  MIME['text/html'].match_filename? 'index.html'
-    #   => true
-    def match_filename?(filename)
-      basename = File.basename(filename)
-      @glob_patterns.any? {|pattern| File.fnmatch pattern, basename}
-    end
-
-    # Check if _file_ is of this particular type by looking for precise
-    # patterns (_magic_ numbers) in different locations of the file.
-    #
-    # _file_ must be an IO object opened with read permissions.
-    def match_file?(f)
-      @magics.any? {|m| m =~ f }
-    end
-
-    def initialize(type) # :nodoc:
-      @type = type
-      @glob_patterns = []
-      @magics = []
-    end
-  end
-
   class << self
     attr_reader :mime_dirs # :nodoc:
 
@@ -285,9 +119,9 @@ module MIME
       @magics.concat Magic.parse_magic(File.read(file))
     end
   end
-
+  
   xdg_data_home = ENV['XDG_DATA_HOME'] || "#{ENV['HOME']}/.local/share"
-  xdg_data_dirs = ENV['XDG_DATA_DIRS'] || "/usr/local/share/:/usr/share"
+  xdg_data_dirs = ENV['XDG_DATA_DIRS'] || "/usr/local/share:/usr/share"
 
   @mime_dirs = (xdg_data_home + ':' + xdg_data_dirs).split(':').collect { |dir|
     "#{dir}/mime"
