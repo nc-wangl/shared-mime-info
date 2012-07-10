@@ -82,7 +82,7 @@ module MIME
     #   => true
     def matches_filename?(filename)
       basename = File.basename(filename)
-      @glob_patterns.any? {|pattern| File.fnmatch pattern, basename}
+      @glob_patterns.any? {|pattern| File.fnmatch pattern, basename.downcase}
     end
 
     # Check if _file_ is of this particular type by looking for precise
