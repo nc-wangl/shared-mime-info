@@ -17,3 +17,9 @@ The github repository: http://github.com/hanklords/shared-mime-info/tree/master
 
  MIME['image/jpeg'].match_filename? 'sample.jpg' # => true
 
+= Notes
+* Ensure that shared-mime-info is installed on the system:
+ > brew install shared-mime-info
+* You may need to update the mime database first:
+ > update-mime-database
+
