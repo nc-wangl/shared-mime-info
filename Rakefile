@@ -4,7 +4,7 @@ require 'rubygems/package_task'
 
 require_relative 'lib/shared-mime-info/version'
 
-PKG_FILES = FileList["lib/*.rb", "Rakefile", "LICENSE", "README.rdoc"]
+PKG_FILES = FileList["lib/*.rb", "lib/shared-mime-info/*", "Rakefile", "LICENSE", "README.rdoc"]
 
 spec = Gem::Specification.new do |s|
   s.summary = "Library to guess the MIME type of a file with both filename lookup and magic file detection"
