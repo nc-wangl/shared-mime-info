@@ -2,14 +2,19 @@ require 'rdoc/task'
 require 'rake/packagetask'
 require 'rubygems/package_task'
 
+require_relative 'lib/shared-mime-info/version'
+
 PKG_FILES = FileList["lib/*.rb", "Rakefile", "LICENSE", "README.rdoc"]
 
 spec = Gem::Specification.new do |s|
   s.summary = "Library to guess the MIME type of a file with both filename lookup and magic file detection"
   s.name = "shared-mime-info"
+  s.description = 'shared-mime-info is a pure Ruby library for accessing the MIME info database provided by Freedesktop'
   s.author = "Mael Clerambault"
   s.email =  "mael@clerambault.fr"
-  s.version = '0.1'
+  s.license = 'Public Domain'
+  s.homepage = 'http://shared-mime.rubyforge.org/'
+  s.version = SharedMimeInfo::VERSION
   s.files = PKG_FILES.to_a
 end
 
