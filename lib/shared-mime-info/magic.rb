@@ -52,7 +52,7 @@ module MIME
       private
       def check_file(f)
         f.pos = @start_offset
-        r = (f.read(@value_length + @range_length -1)|| '').unpack("c*")
+        r = (f.read(@value_length + @range_length - 1)|| '').unpack("c*")
         range_length = 0
         found = false
         while not found and range_length < r.size
